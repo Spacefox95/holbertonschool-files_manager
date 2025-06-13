@@ -1,4 +1,4 @@
-import MongoClient from 'mongodb/lib/mongo_client';
+import mongo from 'mongodb';
 
 class DBClient {
   constructor() {
@@ -6,7 +6,7 @@ class DBClient {
     const port = process.env.DB_PORT || 27017;
     const database = process.env.DB_DATABASE || 'files_manager';
     const uri = `mongodb://${host}:${port}`;
-    this._client = new MongoClient(uri);
+    this._client = new mongo.MongoClient(uri);
 
     this._client
       .connect()
