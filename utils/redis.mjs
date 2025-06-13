@@ -1,38 +1,40 @@
-import { createClient } from 'redis';
+import redis from "redis";
 
 class RedisClient {
   constructor() {
-    this._client = createClient();
-    this._client.on('error', () => console.error(false));
+    this._client = redis.createClient();
+    this._client.on("error", (err) => console.error("Redis error:", err));
   }
 
   isAlive() {
-    if (!this._client) return false;
-    return true;
+    return this._client && this._client.connected;
   }
 
-  async get(key) {
-    try {
-      const value = await this._client.get(key);
-      if (value) return value;
-      return null;
-    } catch (err) {
-      console.error(`Error getting key "${key}":`, err);
-      return null;
-    }
+  get(key) {
+    return new Promise((resolve, reject) => {
+      this._client.get(key, (err, reply) => {
+        if (err) reject(err);
+        resolve(reply);
+      });
+    });
   }
 
-  async set(key, value, duration) {
-    try {
-      this._client.set(key, String(value), 'EX', duration);
-      console.log(value);
-    } catch (err) {
-      console.error(err);
-    }
+  set(key, value, duration) {
+    return new Promise((resolve, reject) => {
+      this._client.setex(key, duration, String(value), (err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
   }
 
-  async del(key) {
-    this._client.del(key);
+  del(key) {
+    return new Promise((resolve, reject) => {
+      this._client.del(key, (err) => {
+        if (err) return reject(err);
+        return resolve();
+      });
+    });
   }
 }
 
