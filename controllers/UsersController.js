@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import sha1 from 'sha1';
 import dbClient from '../utils/db';
 
 class UsersControllers {
@@ -15,13 +15,9 @@ class UsersControllers {
         return res.status(400).json({ error: 'Already exist' });
       }
 
-      const hashedPassword = crypto
-        .createHash('sha1')
-        .update('password')
-        .digest('hex');
       const result = await dbClient.db
         .collection('users')
-        .insertOne({ email, password: hashedPassword });
+        .insertOne({ email, password: sha1(password) });
 
       return res.status(201).json({ email, id: result.insertedId });
     } catch (err) {
