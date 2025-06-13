@@ -1,9 +1,9 @@
-import redis from "redis";
+import redis from 'redis';
 
 class RedisClient {
   constructor() {
     this._client = redis.createClient();
-    this._client.on("error", (err) => console.error("Redis error:", err));
+    this._client.on('error', (err) => console.error('Redis error:', err));
   }
 
   isAlive() {
@@ -23,7 +23,7 @@ class RedisClient {
     return new Promise((resolve, reject) => {
       this._client.setex(key, duration, String(value), (err) => {
         if (err) return reject(err);
-        resolve();
+        return resolve();
       });
     });
   }
