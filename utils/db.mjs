@@ -20,13 +20,13 @@ class DBClient {
     return this._client && this._client.isConnected();
   }
 
-  async nbUsers() {
-    if (!this.db) return 0;
+  nbUsers() {
+    if (!this.isAlive()) return Promise.resolve(0);
     return this.db.collection('users').countDocuments();
   }
 
-  async nbFiles() {
-    if (!this.db) return 0;
+  nbFiles() {
+    if (!this.isAlive()) return Promise.resolve(0);
     return this.db.collection('files').countDocuments();
   }
 }
