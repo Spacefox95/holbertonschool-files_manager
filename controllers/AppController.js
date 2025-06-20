@@ -16,5 +16,4 @@ class AppController {
     res.status(200).json({ users, files });
   }
 }
-
 export default AppController;
