@@ -17,6 +17,7 @@ router.get('/users/me', UsersControllers.getMe);
 
 router.get('/files/:id', FilesController.getShow);
 router.get('/files', FilesController.getIndex);
+router.get('/files/:id/data', FilesController.getFile);
 
 router.post('/users', UsersControllers.postUsers);
 
