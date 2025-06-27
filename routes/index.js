@@ -23,6 +23,6 @@ router.post('/users', UsersControllers.postUsers);
 router.post('/files', FilesController.postUpload);
 
 router.put('/files/:id/publish', FilesController.putPublish);
-router.put('files/:id/unpublish', FilesController.putUnpublish);
+router.put('/files/:id/unpublish', FilesController.putUnpublish);
 
 export default router;
