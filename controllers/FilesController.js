@@ -80,6 +80,66 @@ class FilesController {
       localPath: undefined,
     });
   }
+
+  static async getShow(req, res) {
+    const token = req.headers['x-token'];
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    let fileId;
+    try {
+      fileId = new ObjectId(req.params.id);
+    } catch (err) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const file = await dbClient.db
+      .collection('files')
+      .findOne({ _id: fileId, user: new ObjectId(userId) });
+
+    if (!file) return res.status(404).json({ error: 'Not found' });
+    return res.status(200).json({
+      id: file._id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    });
+  }
+
+  static async getIndex(req, res) {
+    const token = req.headers['x-token'];
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const parentId = req.query.parentId || '0';
+    const page = parseInt(req.query.page, 10) || 0;
+
+    const matchQuery = {
+      userId: new ObjectId(userId),
+      parentId: parentId === '0' ? 0 : new ObjectId(parentId),
+    };
+    const files = await dbClient.db
+      .collection('files')
+      .aggregate([{ $match: matchQuery }, { $skip: page * 20 }, { $limit: 20 }])
+      .toArray();
+
+    const response = files.map((file) => ({
+      id: file._id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    }));
+
+    return res.status(200).json(response);
+  }
 }
 
 export default FilesController;
