@@ -112,10 +112,11 @@ class FilesController {
 
   static async getIndex(req, res) {
     const token = req.headers['x-token'];
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
-
     const userId = await redisClient.get(`auth_${token}`);
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     let parentIdQuery;
 
@@ -127,13 +128,9 @@ class FilesController {
 
     let filterParentId;
     if (parentIdQuery === '0') {
-      filterParentId = 0;
+      filterParentId = '0';
     } else {
-      try {
-        filterParentId = new ObjectId(parentIdQuery);
-      } catch (err) {
-        return res.status(200).json([]);
-      }
+      filterParentId = new ObjectId(parentIdQuery);
     }
 
     let page;
@@ -158,16 +155,28 @@ class FilesController {
       .limit(20)
       .toArray();
 
-    const response = files.map((file) => ({
-      id: file._id,
-      userId: file.userId,
-      name: file.name,
-      type: file.type,
-      isPublic: file.isPublic,
-      parentId: file.parentId,
-    }));
+    const result = [];
 
-    return res.status(200).json(response);
+    for (const file of files) {
+      let resPid;
+
+      if (file.parentId === '0') {
+        resPid = '0';
+      } else {
+        resPid = file.parentId.toString();
+      }
+
+      result.push({
+        id: file._id.toString(),
+        userId: file.userId.toString(),
+        name: file.name,
+        type: file.type,
+        isPublic: file.isPublic,
+        parentId: resPid,
+      });
+    }
+
+    return res.status(200).json(result);
   }
 }
 
