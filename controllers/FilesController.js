@@ -18,7 +18,7 @@ class FilesController {
     const userObjectId = new ObjectId(userId);
 
     const {
-      name, type, parentId = 0, isPulic = false, data,
+      name, type, parentId = 0, isPublic = false, data,
     } = req.body || {};
 
     if (!name) return res.status(400).json({ error: 'Missing name' });
@@ -46,7 +46,7 @@ class FilesController {
       userId: userObjectId,
       name,
       type,
-      isPulic,
+      isPublic,
       parentId: parentObjectId || 0,
     };
 
