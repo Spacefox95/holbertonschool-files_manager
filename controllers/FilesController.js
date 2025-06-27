@@ -117,27 +117,45 @@ class FilesController {
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const page = parseInt(req.query.page, 10) || 0;
-    const parentIdParam = req.query.parentId || '0';
+    let parentIdQuery;
 
-    let parentId;
-    if (parentIdParam === '0') {
-      parentId = 0;
+    if (req.query.parentId === undefined) {
+      parentIdQuery = '0';
+    } else {
+      parentIdQuery = req.query.parentId;
+    }
+
+    let filterParentId;
+    if (parentIdQuery === '0') {
+      filterParentId = 0;
     } else {
       try {
-        parentId = new ObjectId(parentIdParam);
+        filterParentId = new ObjectId(parentIdQuery);
       } catch (err) {
         return res.status(200).json([]);
       }
     }
 
-    const matchQuery = {
-      userId: new ObjectId(userId),
-      parentId,
-    };
+    let page;
+
+    if (!req.query.page) {
+      page = 0;
+    } else {
+      page = parseInt(req.query.page, 10);
+
+      if (Number.isNaN(page) || page < 0) {
+        page = 0;
+      }
+    }
+
     const files = await dbClient.db
       .collection('files')
-      .aggregate([{ $match: matchQuery }, { $skip: page * 20 }, { $limit: 20 }])
+      .find({
+        userId: new ObjectId(userId),
+        parentId: filterParentId,
+      })
+      .skip(page * 20)
+      .limit(20)
       .toArray();
 
     const response = files.map((file) => ({
