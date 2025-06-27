@@ -25,10 +25,10 @@ class FilesController {
 
     if (!type || !['folder', 'file', 'image'].includes(type)) return res.status(400).json({ error: 'Missing type' });
 
-    if (type !== 'folder' || !data) return res.status(400).json({ error: 'Missing data' });
+    if (type !== 'folder' && !data) return res.status(400).json({ error: 'Missing data' });
 
-    let parentObjectId = parentId === 0 ? 0 : null;
-    if (parentId !== 0) {
+    let parentObjectId = 0;
+    if (parentId !== 0 && parentId !== '0') {
       try {
         parentObjectId = new ObjectId(parentId);
       } catch (err) {
