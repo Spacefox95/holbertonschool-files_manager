@@ -1,5 +1,7 @@
 import { ObjectId } from 'mongodb';
 import fs from 'fs';
+import imageThumbnail from 'image-thumbnail';
+
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import mime from 'mime-types';
@@ -71,6 +73,15 @@ class FilesController {
     fs.writeFileSync(localPath, decodedData);
 
     fileDocument.localPath = localPath;
+    if (type === 'image') {
+      const sizes = [500, 250, 100];
+      await Promise.all(
+        sizes.map(async (size) => {
+          const thumbnail = await imageThumbnail(localPath, { width: size });
+          fs.writeFileSync(`${localPath}_${size}`, thumbnail);
+        }),
+      );
+    }
 
     const insertResult = await dbClient.db
       .collection('files')
@@ -277,13 +288,24 @@ class FilesController {
       return res.status(400).json({ error: "A folder doesn't have content" });
     }
 
-    if (!file.localPath || !fs.existsSync(file.localPath)) {
+    const { size } = req.query;
+    let filePath = file.localPath;
+
+    if (size && ['100', '250', '500'].includes(size)) {
+      const sizedPath = `${file.localPath}_${size}`;
+      if (!fs.existsSync(sizedPath)) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+      filePath = sizedPath;
+    }
+
+    if (!filePath || !fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Not found' });
     }
 
     const mimeType = mime.lookup(file.name) || 'application/octet-stream';
     res.setHeader('Content-Type', mimeType);
-    return fs.createReadStream(file.localPath).pipe(res);
+    return fs.createReadStream(filePath).pipe(res);
   }
 }
 
